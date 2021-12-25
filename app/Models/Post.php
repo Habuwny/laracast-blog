@@ -7,11 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $guarded = [];
+  protected $guarded = [];
 //    protected $fillable = ['title', 'excerpt', 'body'];
-protected $with = ['category', 'author'];
+  protected $with = ['category', 'author'];
+
+  public function scopeFilter($query, array $filters)
+  {
+    $query->where($filters['search'] ?? false, fn($query, $search) => $query->where('title', 'like', '%' . $search . '%')->orWhere('body', 'like', '%' . $search . '%'));
+  }
+
   public function getRouteKeyName()
   {
     return 'slug';
@@ -22,7 +28,8 @@ protected $with = ['category', 'author'];
     return $this->belongsTo(Category::class);
   }
 
-  public function author() {
+  public function author()
+  {
     return $this->belongsTo(User::class, 'user_id');
   }
 }
