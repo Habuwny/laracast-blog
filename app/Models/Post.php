@@ -2,58 +2,27 @@
 
 namespace App\Models;
 
-use http\Message\Body;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\File;
-use Spatie\YamlFrontMatter\YamlFrontMatter;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class Post
+class Post extends Model
 {
-  public $title;
-  public $excerpt;
-  public $data;
-  public $body;
-  public $slug;
+    use HasFactory;
 
-  /**
-   * @param $title
-   * @param $excerpt
-   * @param $date
-   * @param $body
-   */
-  public function __construct($title, $excerpt, $date, $body, $slug)
+    protected $guarded = [];
+//    protected $fillable = ['title', 'excerpt', 'body'];
+protected $with = ['category', 'author'];
+  public function getRouteKeyName()
   {
-    $this->title = $title;
-    $this->excerpt = $excerpt;
-    $this->data = $date;
-    $this->body = $body;
-    $this->slug = $slug;
+    return 'slug';
   }
 
-  public static function all()
+  public function category()
   {
-    return collect(File::files(resource_path("posts")))
-      ->map(fn($file) => YamlFrontMatter::parseFile($file))
-      ->map(fn($doc) => new Post(
-        $doc->title,
-        $doc->excerpt,
-        $doc->date,
-        $doc->body(),
-        $doc->slug,
-      ));
-
+    return $this->belongsTo(Category::class);
   }
 
-  public static function find($slug)
-  {
-   return static::all()->firstWhere('slug', $slug);
-  }
-  public static function findOrFail($slug)
-  {
-    $post =  static::find($slug);
-    if (!$post) {
-      throw new ModelNotFoundException();
-    }
-    return $post;
+  public function author() {
+    return $this->belongsTo(User::class, 'user_id');
   }
 }
